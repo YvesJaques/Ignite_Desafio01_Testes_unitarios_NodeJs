@@ -51,7 +51,6 @@ describe("Get statement", () => {
       user_id,
       statement_id,
     });
-    console.log(returnedStatement);
 
     expect(returnedStatement).toBeInstanceOf(Statement);
     expect(returnedStatement).toHaveProperty("id");
