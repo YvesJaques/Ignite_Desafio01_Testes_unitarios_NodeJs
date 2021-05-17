@@ -1,5 +1,6 @@
 import { AppError } from "../../../../shared/errors/AppError";
 import { InMemoryUsersRepository } from "../../repositories/in-memory/InMemoryUsersRepository";
+import { CreateUserError } from "./CreateUserError";
 import { CreateUserUseCase } from "./CreateUserUseCase";
 import { ICreateUserDTO } from "./ICreateUserDTO";
 
@@ -28,20 +29,20 @@ describe("Create user", () => {
   });
 
   it("Should not be able to create more than one user with the same email", async () => {
-    expect(async () => {
-      const user: ICreateUserDTO = {
-        name: "Test User1",
-        email: "test@mail.com",
-        password: "1234",
-      };
+    const user: ICreateUserDTO = {
+      name: "Test User1",
+      email: "test@mail.com",
+      password: "1234",
+    };
 
-      await createUserUseCase.execute(user);
+    await createUserUseCase.execute(user);
 
-      await createUserUseCase.execute({
+    await expect(
+      createUserUseCase.execute({
         name: "Test User2",
         email: "test@mail.com",
         password: "1234",
-      });
-    }).rejects.toBeInstanceOf(AppError);
+      })
+    ).rejects.toEqual(new CreateUserError());
   });
 });
