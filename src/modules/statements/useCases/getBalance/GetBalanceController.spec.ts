@@ -65,4 +65,98 @@ describe("Get balance controller", () => {
 
     expect(response.status).toBe(401);
   });
+
+  it("Should be able to take into account all tranfers made and received by user when calculating the account's balance", async () => {
+    await request(app).post("/api/v1/users").send({
+      name: "Della Stokes",
+      email: "muvegpe@merodoca.ma",
+      password: "1234",
+    });
+
+    await request(app).post("/api/v1/users").send({
+      name: "Alex Todd",
+      email: "aldepha@molguhak.bm",
+      password: "1234",
+    });
+
+    const user1_auth = await request(app).post("/api/v1/sessions").send({
+      email: "muvegpe@merodoca.ma",
+      password: "1234",
+    });
+
+    const user2_auth = await request(app).post("/api/v1/sessions").send({
+      email: "aldepha@molguhak.bm",
+      password: "1234",
+    });
+
+    const { token: user1_token } = user1_auth.body;
+
+    const { token: user2_token } = user2_auth.body;
+
+    const user1_id = (
+      await request(app)
+        .get("/api/v1/profile")
+        .send()
+        .set({
+          Authorization: `Bearer ${user1_token}`,
+        })
+    ).body.id;
+
+    const user2_id = (
+      await request(app)
+        .get("/api/v1/profile")
+        .send()
+        .set({
+          Authorization: `Bearer ${user2_token}`,
+        })
+    ).body.id;
+
+    await request(app)
+      .post("/api/v1/statements/deposit")
+      .send({
+        amount: 900,
+        description: "Deposit test",
+      })
+      .set({
+        Authorization: `Bearer ${user1_token}`,
+      });
+
+    await request(app)
+      .post(`/api/v1/statements/transfer/${user2_id}`)
+      .send({
+        amount: 500,
+        description: "Transfer test",
+      })
+      .set({
+        Authorization: `Bearer ${user1_token}`,
+      });
+
+    await request(app)
+      .post(`/api/v1/statements/transfer/${user1_id}`)
+      .send({
+        amount: 100,
+        description: "Transfer test 2",
+      })
+      .set({
+        Authorization: `Bearer ${user2_token}`,
+      });
+
+    // funds check
+    const user1_balance = await request(app)
+      .get("/api/v1/statements/balance")
+      .send()
+      .set({
+        Authorization: `Bearer ${user1_token}`,
+      });
+
+    const user2_balance = await request(app)
+      .get("/api/v1/statements/balance")
+      .send()
+      .set({
+        Authorization: `Bearer ${user2_token}`,
+      });
+
+    expect(user1_balance.body).toHaveProperty("balance", 500);
+    expect(user2_balance.body).toHaveProperty("balance", 400);
+  });
 });
