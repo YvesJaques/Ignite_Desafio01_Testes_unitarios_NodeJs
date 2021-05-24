@@ -54,6 +54,12 @@ export class StatementsRepository implements IStatementsRepository {
       if (operation.type === "deposit") {
         return Number(acc) + Number(operation.amount);
       }
+      if (operation.type === "transfer") {
+        if (operation.sender_id === user_id) {
+          return Number(acc) - Number(operation.amount);
+        }
+        return Number(acc) + Number(operation.amount);
+      }
       return Number(acc) - Number(operation.amount);
     }, 0);
 
