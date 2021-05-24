@@ -33,6 +33,16 @@ describe("Get balance controller", () => {
 
     const { token } = auth.body;
 
+    await request(app)
+      .post("/api/v1/statements/deposit")
+      .send({
+        amount: 100,
+        description: "Deposit",
+      })
+      .set({
+        Authorization: `Bearer ${token}`,
+      });
+
     const response = await request(app)
       .get("/api/v1/statements/balance")
       .send()
@@ -40,7 +50,7 @@ describe("Get balance controller", () => {
         Authorization: `Bearer ${token}`,
       });
 
-    expect(response.body).toHaveProperty("balance", 0);
+    expect(response.body).toHaveProperty("balance", 100);
   });
 
   it("Should not be able get the balance from an unexistent user account", async () => {
